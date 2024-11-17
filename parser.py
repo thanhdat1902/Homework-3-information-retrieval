@@ -3,7 +3,7 @@ from bs4 import BeautifulSoup
 import re
 # MongoDB setup
 client = MongoClient("mongodb://localhost:27017/")
-db = client["crawlerDB"]
+db = client["CPPCrawler"]
 pages_collection = db["pages"]
 professors_collection = db["professors"]
 
@@ -50,7 +50,6 @@ def parse_professor_details(soup):
 
     return professor_info
 
-
 def parse_professors(html_content):
     soup = BeautifulSoup(html_content, 'html.parser')
     professor_list = []
@@ -66,18 +65,25 @@ def parse_professors(html_content):
         return []  # Return empty if 'Permanent Faculty' is not found
 
     for prof_div in main_section.find_all('div'):
-        img = prof_div.find('img')
-        h2 = prof_div.find('h2')
-        p = prof_div.find('p')
+        # Find all professor's details in the div (i.e., both img, h2, and p)
+        img_tags = prof_div.find_all('img')
+        h2_tags = prof_div.find_all('h2')
+        p_tags = prof_div.find_all('p')
 
-        # Ensure it has at least one img, h2, and p
-        if img and h2 and p:
-            # Extract details
-            name = h2.get_text(strip=True)
-            details = p
-            professor = parse_professor_details(details)
-            # Add the professor to the list
-            professor_list.append({"name": name, **professor})
+        # Ensure we have at least one image, h2, and p tag
+        if len(h2_tags) > 0 and len(p_tags) > 0:
+            for i in range(len(h2_tags)):
+                # Extract professor's name
+                name = h2_tags[i].get_text(strip=True)
+
+                # Extract the corresponding details (assumes that p_tags are in order)
+                details = p_tags[i]
+
+                # Parse the professor details
+                professor = parse_professor_details(details)
+
+                # Add the professor to the list
+                professor_list.append({"name": name, **professor})
 
     return professor_list
 

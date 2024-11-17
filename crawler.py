@@ -5,7 +5,7 @@ from pymongo import MongoClient
 
 # MongoDB setup
 client = MongoClient("mongodb://localhost:27017/")
-db = client["crawlerDB"]
+db = client["CPPCrawler"]
 collection = db["pages"]
 
 # Starting URL and stop criteria
@@ -30,6 +30,9 @@ class Frontier:
 
     def done(self):
         return len(self.frontier) == 0
+
+    def empty(self):
+        self.frontier = []
 
 def retrieveHTML(url):
     try:
@@ -72,6 +75,7 @@ def crawler(frontier):
             storePage(url, html)
             if target_page(html):
                 print(f"Target page found: {url}")
+                frontier.empty()
                 return
             for link in parse(html):
                 frontier.addURL(link)
